@@ -26,8 +26,8 @@ public class StatsServiceImpl implements StatsService {
     @Override
     @Transactional
     public HitDto addStat(HitDto hitDto) {
-       Hit hit = statsRepository.save(HitMapper.toHit(hitDto));
-       return new HitDto(hitDto.getId(), hit.getApp(), hit.getUri(), hit.getIp(), hit.getCreated());
+        Hit hit = statsRepository.save(HitMapper.toHit(hitDto));
+        return new HitDto(hitDto.getId(), hit.getApp(), hit.getUri(), hit.getIp(), hit.getCreated());
     }
 
     @Transactional
