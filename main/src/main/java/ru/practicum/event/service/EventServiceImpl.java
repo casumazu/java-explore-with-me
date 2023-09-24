@@ -32,7 +32,7 @@ public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
     private final CategoryRepository categoryRepository;
-    private final StatisticsClient statsClient = new StatisticsClient("http://localhost:8080", new RestTemplateBuilder());
+    private final StatisticsClient statsClient = new StatisticsClient("http://stat-server:9090", new RestTemplateBuilder());
 
     private final LocationRepository locationRepository;
     private final UserRepository userRepository;
