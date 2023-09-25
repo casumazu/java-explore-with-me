@@ -37,7 +37,7 @@ public class UserController {
     public List<UserDto> findAllUsers(@RequestParam(value = "ids", required = false) List<Long> ids,
                                       @RequestParam(name = "from", defaultValue = "0") @Min(0) Integer from,
                                       @RequestParam(name = "size", defaultValue = "10") @Min(1) Integer size) {
-        PageRequest pageRequest = PageRequest.of(from, size);
-        return userService.findAllUsers(ids, pageRequest);
+
+        return userService.findAllUsers(ids, PageRequest.of(from, size));
     }
 }

@@ -28,6 +28,8 @@ public class StatsServiceImpl implements StatsService {
     private final StatsRepository statsRepository;
     private final HitMapper hitMapper;
 
+    public static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     @Override
     @Transactional
     public HitDto createHit(HitDto hitDto) {
@@ -43,33 +45,31 @@ public class StatsServiceImpl implements StatsService {
         LocalDateTime endDate;
 
         try {
-            startDate = LocalDateTime.parse(URLDecoder.decode(start, StandardCharsets.UTF_8),
-                    DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-            endDate = LocalDateTime.parse(URLDecoder.decode(end, StandardCharsets.UTF_8),
-                    DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            startDate = LocalDateTime.parse(URLDecoder.decode(start, StandardCharsets.UTF_8), dateTimeFormatter);
+            endDate = LocalDateTime.parse(URLDecoder.decode(end, StandardCharsets.UTF_8), dateTimeFormatter);
         } catch (DateTimeParseException e) {
-            throw new ValidationException("Не верный формат даты.");
+            throw new ValidationException("Некорректный формат даты.");
         }
         if (startDate.isAfter(endDate)) {
             throw new ValidationException("Даты начала и окончания некорректны.");
         }
-        boolean onlyUnique = Boolean.valueOf(unique);
-        List<StatsDto> stats;
-
-        if (uris != null && !uris.isEmpty()) {
-            uris = uris.stream().map(StringUtils::strip).collect(Collectors.toList());
-        }
-
+        boolean onlyUnique = Boolean.parseBoolean(unique);
         if (onlyUnique) {
-            stats = uris != null && !uris.isEmpty()
-                    ? statsRepository.getUniqueWithUris(startDate, endDate, uris)
-                    : statsRepository.getUniqueWithOutUris(startDate, endDate);
+            if (uris != null && !uris.isEmpty()) {
+                uris.replaceAll(s -> s.replace("[", ""));
+                uris.replaceAll(s -> s.replace("]", ""));
+                return statsRepository.getUniqueWithUris(startDate, endDate, uris);
+            } else {
+                return statsRepository.getUniqueWithOutUris(startDate, endDate);
+            }
         } else {
-            stats = uris != null && !uris.isEmpty()
-                    ? statsRepository.getWithUris(startDate, endDate, uris)
-                    : statsRepository.getWithOutUris(startDate, endDate);
+            if (uris != null && !uris.isEmpty()) {
+                uris.replaceAll(s -> s.replace("[", ""));
+                uris.replaceAll(s -> s.replace("]", ""));
+                return statsRepository.getWithUris(startDate, endDate, uris);
+            } else {
+                return statsRepository.getWithOutUris(startDate, endDate);
+            }
         }
-
-        return stats;
     }
 }
