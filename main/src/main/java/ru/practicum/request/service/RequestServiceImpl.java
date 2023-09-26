@@ -44,6 +44,18 @@ public class RequestServiceImpl implements RequestService {
         Request request = new Request(LocalDateTime.now(), event, user, RequestStatus.PENDING);
         Optional<Request> requests = requestRepository.findByRequesterIdAndEventId(userId, eventId);
 
+        checkExceptionsForCreateRequest(userId, requests, event, request);
+
+        if (!event.getRequestModeration()) {
+            request.setStatus(RequestStatus.CONFIRMED);
+            event.setConfirmedRequests(event.getConfirmedRequests() + 1);
+        }
+        Request requestToSave = requestRepository.save(request);
+
+        return requestMapper.toRequestDto(requestToSave);
+    }
+
+    private void checkExceptionsForCreateRequest(Long userId, Optional<Request> requests, Event event, Request request) {
         if (event.getInitiator().getId().equals(userId)) {
             throw new NotAvailableException("Ошибка. Событие организовано пользователем.");
         }
@@ -53,7 +65,6 @@ public class RequestServiceImpl implements RequestService {
         if (!(event.getState().equals(State.PUBLISHED))) {
             throw new NotAvailableException("Ошибка. Событие не опубликовано.");
         }
-
         int limit = event.getParticipantLimit();
         if (limit != 0) {
             if (limit == event.getConfirmedRequests()) {
@@ -62,14 +73,6 @@ public class RequestServiceImpl implements RequestService {
         } else {
             request.setStatus(RequestStatus.CONFIRMED);
         }
-
-        if (!event.getRequestModeration()) {
-            request.setStatus(RequestStatus.CONFIRMED);
-            event.setConfirmedRequests(event.getConfirmedRequests() + 1);
-        }
-        Request requestToSave = requestRepository.save(request);
-
-        return requestMapper.toRequestDto(requestToSave);
     }
 
     @Override
@@ -99,7 +102,9 @@ public class RequestServiceImpl implements RequestService {
         if (request.getStatus().equals(RequestStatus.REJECTED) || request.getStatus().equals(RequestStatus.CANCELED)) {
             throw new BadRequestException("Ошибка. Заявка была отклонена ранее.");
         }
-
+        if (request.getStatus().equals(RequestStatus.CONFIRMED)) {
+            throw new BadRequestException("Ошибка. Нельзя отменить подтвержденную заявку.");
+        }
         request.setStatus(RequestStatus.CANCELED);
 
         return requestMapper.toRequestDto(requestRepository.save(request));

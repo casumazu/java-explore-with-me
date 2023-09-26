@@ -27,6 +27,11 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public CategoryDto create(NewCategoryDto newCategoryDto) {
+
+        if (newCategoryDto.getName() == null || newCategoryDto.getName().isEmpty()) {
+            throw new ValidationException("Название категории не может быть пустым.");
+        }
+
         if (categoryRepository.existsByName(newCategoryDto.getName())) {
             throw new ExistsException("Категория с именем " + newCategoryDto.getName() + " уже существует.");
         }
@@ -49,21 +54,19 @@ public class CategoryServiceImpl implements CategoryService {
 
         if (!categoryToUpdate.getName().equals(categoryDto.getName()) && categoryRepository.existsByName(categoryDto.getName())) {
             throw new ExistsException("Категория с именем " + categoryDto.getName() + " уже существует.");
-        } else {
-            categoryToUpdate.setName(categoryDto.getName());
-            return categoryMapper.toCategoryDto(categoryRepository.save(categoryToUpdate));
         }
+        categoryToUpdate.setName(categoryDto.getName());
+        return categoryMapper.toCategoryDto(categoryRepository.save(categoryToUpdate));
     }
 
     @Override
     @Transactional
     public void delete(Long categoryId) {
-        categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new NotFoundException("Категория с id " + categoryId + " не найдена."));
-
         if (eventRepository.existsByCategoryId(categoryId)) {
             throw new NotAvailableException("Ошибка. Категория содержит события.");
         }
+        categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundException("Категория с id " + categoryId + " не найдена."));
 
         categoryRepository.deleteById(categoryId);
     }

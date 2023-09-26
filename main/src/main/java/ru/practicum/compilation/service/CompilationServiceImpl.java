@@ -30,23 +30,17 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional
     public CompilationDto create(NewCompilationDto newCompilationDto) {
 
+        Compilation compilation = compilationMapper.toCompilation(newCompilationDto);
+
         if (newCompilationDto.getEvents() != null && !newCompilationDto.getEvents().isEmpty()) {
             Set<Long> eventIds = newCompilationDto.getEvents();
             Set<Event> events = new HashSet<>(eventRepository.findAllByIdIn(eventIds));
-
-            Compilation compilation = compilationMapper.toCompilation(newCompilationDto);
             compilation.setEvents(events);
-
-            Compilation compilationToSave = compilationRepository.save(compilation);
-            return compilationMapper.toCompilationDto(compilationToSave);
+        } else {
+            compilation.setEvents(new HashSet<>());
         }
 
-        Compilation fromDto = compilationMapper.toCompilation(newCompilationDto);
-        if (fromDto.getEvents() == null) {
-            fromDto.setEvents(new HashSet<>());
-        }
-
-        Compilation compilationToSave = compilationRepository.save(fromDto);
+        Compilation compilationToSave = compilationRepository.save(compilation);
         return compilationMapper.toCompilationDto(compilationToSave);
     }
 
