@@ -9,5 +9,6 @@ import ru.practicum.comments.model.Comment;
 @Mapper(componentModel = "spring")
 public interface CommentMapper {
     Comment toComment(CommentDto commentDto);
+
     CommentDto toCommentDto(Comment comment);
 }
